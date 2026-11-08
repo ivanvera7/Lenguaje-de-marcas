@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lenguaje de marcas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#13110f; --bg2:#1c1916; --line:#2e2925; --ink:#efe6d6; --mute:#9a8f80;
+  --acc:#ff6b3d; --ok:#8fd19e; --ko:#ff5a5f; --okbg:rgba(143,209,158,.10); --kobg:rgba(255,90,95,.10);
+  --mono:"IBM Plex Mono",ui-monospace,monospace; --disp:"Bricolage Grotesque",Georgia,serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  min-height:100vh;background:var(--bg);color:var(--ink);font-family:var(--disp);font-size:17px;line-height:1.5;
+  background-image:
+    linear-gradient(var(--line) 1px,transparent 1px),
+    linear-gradient(90deg,var(--line) 1px,transparent 1px),
+    radial-gradient(1200px 600px at 85% -10%,rgba(255,107,61,.16),transparent 60%);
+  background-size:48px 48px,48px 48px,100% 100%;
+  background-attachment:fixed;
+}
+body::after{ /* grain */
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.07;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.wrap{max-width:860px;margin:0 auto;padding:40px 16px 80px}
+header{display:grid;grid-template-columns:1fr auto;gap:12px 24px;align-items:end;margin-bottom:28px}
+.kicker{font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--acc)}
+h1{font-size:clamp(44px,9vw,92px);font-weight:800;line-height:.9;letter-spacing:-.04em;grid-column:1}
+h1 em{font-style:normal;color:var(--acc)}
+.tabs{display:flex;gap:4px;font-family:var(--mono);font-size:13px;background:var(--bg2);border:1px solid var(--line);padding:4px;border-radius:999px}
+.tabs button{all:unset;cursor:pointer;padding:7px 14px;border-radius:999px;color:var(--mute);transition:.2s}
+.tabs button[aria-selected=true]{background:var(--ink);color:var(--bg)}
+.tabs button:focus-visible,.opt:focus-visible,.btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+.meta{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:13px;color:var(--mute);margin-bottom:10px;gap:12px;flex-wrap:wrap}
+.meta b{color:var(--ink);font-weight:600}
+.score{display:flex;gap:14px}
+.score .g{color:var(--ok)} .score .r{color:var(--ko)}
+.track{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:2px;margin-bottom:26px}
+.track i{height:6px;border-radius:2px;background:var(--line);transition:background .3s}
+.track i.cur{background:var(--ink)} .track i.ok{background:var(--ok)} .track i.ko{background:var(--ko)}
+
+.card{background:linear-gradient(180deg,rgba(28,25,22,.96),rgba(22,19,17,.96));border:1px solid var(--line);border-radius:18px;padding:clamp(20px,4vw,36px);box-shadow:0 30px 80px -30px rgba(0,0,0,.7);position:relative;overflow:hidden}
+.card::before{content:attr(data-n);position:absolute;right:-6px;top:-34px;font-size:160px;font-weight:800;letter-spacing:-.06em;color:rgba(239,230,214,.04);pointer-events:none}
+.q{font-size:clamp(20px,3.2vw,26px);font-weight:600;line-height:1.3;letter-spacing:-.01em;margin-bottom:22px;white-space:pre-wrap;position:relative}
+.opts{display:grid;gap:10px}
+.opt{all:unset;box-sizing:border-box;display:grid;grid-template-columns:34px 1fr;gap:14px;align-items:start;padding:14px 16px;border:1px solid var(--line);border-radius:12px;cursor:pointer;transition:border-color .15s,background .15s,transform .15s;background:rgba(255,255,255,.015)}
+.opt:hover:not([disabled]){border-color:var(--mute);transform:translateX(3px)}
+.opt .k{font-family:var(--mono);font-size:13px;font-weight:600;width:34px;height:28px;display:grid;place-items:center;border:1px solid var(--line);border-radius:7px;color:var(--mute)}
+.opt[disabled]{cursor:default}
+.opt.ok{border-color:var(--ok);background:var(--okbg)} .opt.ok .k{background:var(--ok);color:var(--bg);border-color:var(--ok)}
+.opt.ko{border-color:var(--ko);background:var(--kobg)} .opt.ko .k{background:var(--ko);color:var(--bg);border-color:var(--ko)}
+.opt.dim{opacity:.45}
+.opt.ok,.opt.ko{animation:pop .35s cubic-bezier(.2,.9,.3,1.4)}
+@keyframes pop{from{transform:scale(.98)}to{transform:scale(1)}}
+.exp{margin-top:20px;padding:16px 18px;border-left:3px solid var(--acc);background:rgba(255,107,61,.06);border-radius:0 10px 10px 0;font-size:15.5px;color:#ddd2c1;animation:rise .35s ease both}
+.exp::before{content:"-- explicación";display:block;font-family:var(--mono);font-size:12px;color:var(--acc);margin-bottom:6px}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.nav{display:flex;justify-content:space-between;align-items:center;margin-top:22px;gap:12px}
+.btn{all:unset;cursor:pointer;font-family:var(--mono);font-size:14px;font-weight:500;padding:12px 20px;border-radius:999px;border:1px solid var(--line);color:var(--ink);transition:.2s;text-align:center}
+.btn:hover{border-color:var(--ink)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#1a0d07;font-weight:600}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn[hidden]{display:none}
+.hint{font-family:var(--mono);font-size:12px;color:var(--mute)}
+
+.end{text-align:center;padding:12px 0}
+.big{font-size:clamp(90px,22vw,180px);font-weight:800;letter-spacing:-.06em;line-height:.9}
+.big small{font-size:.3em;color:var(--mute);letter-spacing:0}
+.verdict{font-family:var(--mono);color:var(--mute);margin:10px 0 26px}
+.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.fails{text-align:left;margin-top:30px;display:grid;gap:10px}
+.fails li{list-style:none;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-size:15px}
+.fails li span{display:block;font-family:var(--mono);font-size:13px;color:var(--ok);margin-top:4px}
+
+.rev{display:grid;gap:14px}
+.rev article{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.rev h3{font-size:17px;font-weight:600;white-space:pre-wrap;margin-bottom:10px}
+.rev h3 b{font-family:var(--mono);color:var(--acc);margin-right:8px}
+.rev ul{list-style:none;display:grid;gap:4px;font-size:15px}
+.rev li{padding-left:22px;position:relative;color:var(--mute)}
+.rev li::before{content:"·";position:absolute;left:6px}
+.rev li.c{color:var(--ok)} .rev li.c::before{content:"✓";left:2px}
+.rev p{margin-top:10px;font-size:14px;color:#c9bfaf;border-top:1px dashed var(--line);padding-top:10px}
+.filter{width:100%;margin-bottom:16px;padding:12px 16px;border-radius:12px;border:1px solid var(--line);background:var(--bg2);color:var(--ink);font:15px var(--mono)}
+.filter:focus{outline:2px solid var(--acc)}
+footer{margin-top:40px;font-family:var(--mono);font-size:12px;color:var(--mute);text-align:center}
+footer a{color:inherit}
+@media (max-width:560px){header{grid-template-columns:1fr}.tabs{justify-self:start}.hint{display:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="kicker">Ilerna · Ex1 + LM 2026 · 84 preguntas</div>
+      <h1>Lenguaje de<br><em>marcas</em></h1>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-mode="test">Test</button>
+      <button role="tab" aria-selected="false" data-mode="review">Repaso</button>
+    </nav>
+  </header>
+  <main id="app"></main>
+  <footer>Preguntas: <a href="https://www.daypo.com/lenguaje-marcas-ex1.html">Daypo · Lenguaje de marcas Ex1 (M13)</a> + <a href="https://www.daypo.com/lm-2026-ilerna.html">Daypo · LM 2026 ilerna (David)</a></footer>
+</div>
+<script>
+const DATA = [{"q": "¿Qué lenguaje de los siguientes se clasifica como procedimental?", "o": ["CSS", "JSON", "XML", "JavaScript"], "a": [3], "h": ""}, {"q": "¿Qué tipo de lenguajes de marcas dan formato al texto del documento aplicando macros y rutinas?", "o": ["Semántico", "De presentación", "Procedimental", "Orientados a tecnologías de Internet."], "a": [2], "h": ""}, {"q": "¿Qué define un documento XML?", "o": ["Un formato de imagen", "Un conjunto de datos binarios", "Una estructura jerárquica", "Un esquema relacional"], "a": [2], "h": ""}, {"q": "¿Cuál de los siguientes no es un carácter reservado en XML?", "o": ["\u003c", ">", "&", "@"], "a": [3], "h": ""}, {"q": "¿Cómo deben estar los elementos XML?", "o": ["Solo en inglés", "Abiertos y sin cerrar", "En minúsculas", "Bien anidados"], "a": [3], "h": ""}, {"q": "En lenguaje de marcas, el acrónimo \"RSS\" significa lo siguiente:", "o": ["Really Soviet Syndication", "Really Standard Syndication", "Read Syndication Simple", "Ninguna de las otras respuestas es correcta"], "a": [3], "h": "Really Simple Syndication"}, {"q": "Para seleccionar todos los elementos \u003ca> que se encuentran dentro de un elemento \u003cp>, deberemos usar el selector CSS:", "o": ["a > p { }", "a p { }", "p a { }", "p, a { }"], "a": [2], "h": ""}, {"q": "Para poder construir una lista en HTML en la que los elementos lleven algún tipo de orden usaremos:", "o": ["\u003cli>", "\u003cul>", "\u003col>", "\u003cil>"], "a": [2], "h": ""}, {"q": "¿Cuál es la diferencia entre \u003cth> y \u003ctd>?", "o": ["\u003cth> se utiliza para los encabezados de tabla y \u003ctd> para la información.", "\u003ctd> y \u003cth> no se utilizan dentro de las tablas.", "\u003ctd> se utiliza para los encabezados de tabla y \u003cth> para la información.", "\u003cth> se utiliza para la sección de encabezados de la tabla y \u003ctd> para las filas de información."], "a": [0], "h": ""}, {"q": "En CSS, ¿para qué se usa el selector asterisco ( * )?", "o": ["Seleccionar todos los elementos de un tipo", "Seleccionar un único elemento", "Permite seleccionar todos los elementos del documento", "Seleccionar varios elementos de una clase"], "a": [2], "h": ""}, {"q": "La etiqueta \u003cchannel> tiene como función principal describir la fuente RSS. ¿Mediante qué elementos lo hace?", "o": ["Todas las opciones son correctas", "\u003ctitle>", "\u003clink>", "\u003cdescription>"], "a": [0], "h": ""}, {"q": "Elementos principales de un RSS. Sobre la etiqueta \u003ctitle>:", "o": ["Define un hipervínculo al canal.", "Se encarga de describir el contenido correspondiente al canal.", "Hace referencia al nombre del canal", "Ninguna opción es correcta."], "a": [2], "h": ""}, {"q": "¿Qué propiedad se utiliza para cambiar el color de fondo de un elemento en JavaScript?", "o": ["elemento.style.backgroundColor", "elemento.background", "elemento.style.background", "elemento.style.color"], "a": [0], "h": ""}, {"q": "¿Qué característica hace que los lenguajes de script sean adecuados para desarrolladores principiantes?", "o": ["Su facilidad de uso y sintaxis simplificada", "La necesidad de compilar el código antes de ejecutarlo", "Su tipado estático", "La disponibilidad limitada de bibliotecas"], "a": [0], "h": ""}, {"q": "¿Qué característica tienen en común la mayoría de los lenguajes de script en cuanto a la ejecución en diferentes sistemas operativos?", "o": ["Necesitan recompilarse para cada plataforma", "Son específicos para desarrollo de aplicaciones de escritorio", "Solo funcionan en sistemas basados en Unix", "Son portátiles y no necesitan modificación del código para distintos sistemas operativos"], "a": [3], "h": ""}, {"q": "¿Cómo se define una función en JavaScript usando la sintaxis moderna?", "o": ["function miFuncion() => {}", "function miFuncion() {}", "var miFuncion = function() {}", "const miFuncion = () => {}"], "a": [3], "h": ""}, {"q": "La conversión de XML a CSV es útil para integrar los datos con:", "o": ["hojas de cálculo o bases de datos relacionales", "bases de datos de grafos", "páginas web interactivas", "lenguajes de programación como JavaScript"], "a": [0], "h": ""}, {"q": "¿Qué biblioteca de Java se emplea para el procesamiento de documentos XML?", "o": ["JAVAXML", "DOM", "JAXP", "SAX"], "a": [2], "h": ""}, {"q": "¿Cuál es la función principal de asociar un documento XML con una hoja de estilos CSS?", "o": ["Para estilizar o dar formato a su contenido", "Para ejecutar código de programación", "Para agregar interactividad", "Para transformar el documento a otro formato"], "a": [0], "h": ""}, {"q": "¿Cuál es el principal beneficio de la 'versatilidad' de la conversión de XML?", "o": ["Permite la validación de la estructura del documento", "Permite que los documentos sean más fáciles de leer para los humanos", "Reducción del tiempo de procesamiento", "Soporte para múltiples formatos como JSON, HTML, y CSV"], "a": [3], "h": ""}, {"q": "¿Cuál es un beneficio de usar un lenguaje de programación como Java o JavaScript para procesar XML?", "o": ["Estilizar el documento para la presentación visual", "Almacenar los datos en un formato fijo e inmutable", "Exportar el documento a una base de datos relacional", "Permitir la manipulación de datos para integrarlos en aplicaciones dinámicas"], "a": [3], "h": ""}, {"q": "¿Cuál es la principal ventaja de la conversión y adaptación de documentos XML, según el texto?", "o": ["Reducir el tamaño del archivo para un almacenamiento más eficiente", "Facilitar la integración entre sistemas que utilizan formatos de datos diferentes", "Mejorar la velocidad de carga de las páginas web.", "Aumentar la seguridad del documento"], "a": [1], "h": ""}, {"q": "En XPATH, la expresión /clase/alumno[nombre=\"David\"] nos devuelve:", "o": ["Todos los elementos \"alumno\" que incluyen un elemento \"nombre\" que tiene el valor \"David\"", "El primer elemento \"alumno\" que incluye un elemento \"nombre\" que tiene el valor \"David\" que se encuentre en el documento.", "Ninguna respuesta es correcta.", "Todos los elementos \"nombre\" que tienen el valor \"David\"."], "a": [0], "h": ""}, {"q": "En XPATH, la expresión count(/notas/asignatura[calificacion>5]) nos devuelve:", "o": ["El número de elementos \"asignatura\" que tenemos.", "El número de elementos \"asignatura\" que tienen una \"calificación\" mayor que 5", "Ninguna respuesta es correcta", "Verdadero si el número de elementos \"calificación\" es mayor que 5"], "a": [1], "h": ""}, {"q": "La característica de los ERP de \"Modular\" significa:", "o": ["Organiza las aplicaciones por módulos independientes", "Consiguen adaptarse a las diferentes necesidades de una empresa", "Ofrecen capacidad de crecimiento", "Abarca todas las necesidades a la hora de gestionar una empresa"], "a": [0], "h": ""}, {"q": "En castellano, el acrónimo en inglés SFA corresponde a:", "o": ["Servicios de Funcionalidades Adicionales", "Sistemas de Automatización de Ventas", "Sistemas Automáticos de Salidas", "Servidores de Venta Automatizada"], "a": [1], "h": ""}, {"q": "Los ERP son muy versátiles, ya que pueden funcionar en diferentes sistemas operativos, sus características principales son:", "o": ["Solo integral y modular", "Integral, Modificar y Parametrizable", "Integral, Modular, Parametrizable y Escalable", "Ninguna es correcta"], "a": [2], "h": ""}, {"q": "Lenguaje XML que usamos para dar una presentación visual a un documento XML.", "o": ["XSLT", "XSL-FO", "Ninguna es correcta", "XPath"], "a": [1], "h": ""}, {"q": "¿Qué devuelve count(/elemento/asignaturas[nota>5])?", "o": ["Los elementos asignatura con nota mayor que cinco", "Suma de elementos asignatura con nota mayor que cinco", "Ninguna es correcta", "Número de elementos asignatura con nota mayor que cinco"], "a": [3], "h": ""}, {"q": "/autores/autor [nacimiento= \"\"]", "o": ["Todos los autores sin fecha de nacimiento", "Todos los elementos autor sin fecha de nacimiento", "Todos los elementos autor sin fecha de nacimiento o con el campo vacío", "Ninguna es correcta"], "a": [1], "h": ""}, {"q": "Elige la opción correcta:", "o": ["SAP es el nombre de la empresa Alemana encargada de desarrollar un ERP comercial", "SAP son las siglas de Software Altamente Productivo", "SAP son siglas que significan Sistema Aparición Productiva", "SAP es considerada la menor empresa desarrolladora de Software empresarial más importante de Europa"], "a": [0], "h": ""}, {"q": "Dependiendo del tipo de marcas que utilicemos, podemos dividir los lenguajes de marcas en:", "o": ["Solo procedimental y de almacenamiento recursivo", "Solo presentación y descriptivo", "De presentación, descriptivo y procedimental", "Solo descriptivo y procedimental"], "a": [2], "h": ""}, {"q": "Podemos definir las aplicaciones de ______________ como aquellas que consiguen, entre otras funciones, automatizar y agilizar procesos, registrar resultados y favorecer la extracción de conclusiones.", "o": ["ERP mixto", "CRM temporal", "Inteligencia de clientes y proveedores", "Inteligencia de negocio"], "a": [3], "h": ""}, {"q": "Devuelve los datos de un documento XML ordenados por algún método.", "o": ["xsl:choose", "xsl:sort", "Ninguna es correcta", "xsl:for-each"], "a": [1], "h": ""}, {"q": "El elemento (o secuencia de elementos) puede aparecer una y solo una vez.", "o": ["Ninguna es correcta", "*", "¿", "+"], "a": [0], "h": ""}, {"q": "¿Qué significa el acrónimo CRM en español?", "o": ["Gestión de Relaciones con Clientes", "Gestión de Recursos con Control", "Gestión de Rigurosidad de Clientes", "Ninguna opción es correcta"], "a": [0], "h": ""}, {"q": "Definición de parametrizable:", "o": ["Abarca todas las necesidades a la hora de gestionar una empresa", "Organiza las aplicaciones por módulos independientes", "Consiguen adaptarse a las diferentes necesidades de una empresa", "Ofrecen capacidad de crecimiento"], "a": [2], "h": ""}, {"q": "¿De qué se encarga un CRM?", "o": ["Gestiona las operaciones relacionadas con los clientes", "Permiten analizar los datos de las acciones que se realizan", "Implantar y optimizar los procesos de realización de tareas", "Gestionan los cambios que se tienen que realizar en las actividades y proc"], "a": [0], "h": ""}, {"q": "CRM es:", "o": ["Ninguna es correcta", "Es un software informático encargado de relaciones con famosos", "Es un software informático orientado a la relación y comunicación con los clientes", "Es un software informático orientado a la relación y comunicación con los proveedores"], "a": [2], "h": ""}, {"q": "XML-SCHEMA...", "o": ["Desciende de XML y sirve para transformar el documento", "Desciende de XML y se encarga de que un documento esté bien formado", "Desciende de DTD y se encarga de que un documento esté bien formado", "Ninguna es correcta"], "a": [1], "h": ""}, {"q": "Hace referencia a aquellos caracteres que no disponen de etiquetas", "o": ["CDATA", "DATA", "Ninguna es correcta", "PCDATA"], "a": [0], "h": ""}, {"q": "Una de las ventajas principales de RSS es:", "o": ["Ninguna es correcta", "Ofrece la posibilidad de poder eliminar información de diferentes sitios sin que ello afecte a la agrupación", "Ofrece la posibilidad de poder eliminar información de diferentes sitios sin que ello signifique perder tiempo con la agrupación", "Ofrece la posibilidad de poder filtrar información de diferentes sitios sin perder tiempo utilizando la agrupación"], "a": [3], "h": ""}, {"q": "¿Para qué usamos XSL-FO?", "o": ["Diseñado para transformar documentos XML a otras sintaxis", "Para dar una presentación visual a un documento XML para generar un PDF", "Ninguna es correcta", "Lenguaje de consulta para crear expresiones que recorren un documento XML a través de sus nodos"], "a": [1], "h": ""}, {"q": "Hay tres formas de incluir CSS en un documento HTML:", "o": ["CSS en línea, CSS interno y CSS externo", "CSS externo, CSS interno y con XSD", "Ninguna es correcta", "CSS en línea, CSS externo e híbrido"], "a": [0], "h": ""}, {"q": "BPM significa:", "o": ["Gestión de Procesos de Negocio", "Gestión de Procesos Burocráticos", "Gestión del Conocimiento", "Gestión de Relaciones con Proveedores"], "a": [0], "h": ""}, {"q": "ERP significa:", "o": ["Enterprise Resource Program", "Enterprise Random Software", "Ninguna es correcta", "Enterprise Resolution Planning"], "a": [2], "h": "Enterprise Resource Planning"}, {"q": "SAP cuenta con el módulo \"LO\", el cuál significa:", "o": ["Logística (Logistics)", "SAP no cuenta con ese módulo", "Órdenes Lógicas (Logical Orders)", "Ninguna es correcta"], "a": [0], "h": ""}, {"q": "Define las aplicaciones de inteligencia de negocio", "o": ["Procesos del mundo de los negocios donde todo se gestiona y centraliza en una misma aplicación", "Aplicaciones que se manejan de forma inteligente y hacen todo por el usuario", "No existen, es un término usado para vender ciertas aplicaciones de una forma más atractiva", "Aplicaciones que consiguen, entre otras cosas, automatizar y agilizar procesos, registrar resultados y favorecer la extracción de conclusiones"], "a": [3], "h": ""}, {"q": "En XPath, la expresión @atrib significa:", "o": ["Ninguna es correcta", "Atributo que se identifica con el nombre \"elemento\"", "Atributo que se identifica con el nombre \"atrib\"", "Atributo que se identifica con el nombre \"atributo\""], "a": [2], "h": ""}, {"q": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?>", "o": ["Va en la cabecera", "Hay que declararlo en un documento XML", "Especifica el tipo de codificación usada en el documento", "Todas son correctas"], "a": [3], "h": ""}, {"q": "Los ERP cuentan con un gran número de módulos, los mas conocidos son", "o": ["Recursos humanos", "Gestión de clientes", "Todas las opciones son correctas", "Gestión de ventas"], "a": [2], "h": ""}, {"q": "¿Cual de las siguientes es una caracteristicas clave de los sistemas ERP?", "o": ["No permiten la generación de informes", "Son escalables y modulares", "Son dificiles de adaptar a las necesidades de la empresa", "No ofrecen soporte para la gestion de recursos humanos"], "a": [1], "h": ""}, {"q": "¿Que característica NO define a los sistemas ERP?", "o": ["Escalabilidad", "Descentralización", "Automatización", "Acceso en tiempo real"], "a": [1], "h": ""}, {"q": "¿Cual es el objetivo principal de la Inteligencia de negocio Business Intelligence?", "o": ["Instalar antivirus en todos los equipos de la red local", "Crear una página web estática para mostrar la dirección de la empresa", "Reemplazar a los empleados por algoritmos de inteligencia artificial", "Transformar datos en información valiosa para facilitar la toma de decisiones"], "a": [3], "h": ""}, {"q": "La caracteristica de los ERP de \"Integral\" significa:", "o": ["Consiguen adaptarse a las diferentes necesidades de una empresa", "Organiza las aplicaciones por modulos independientes", "Ofrecen capacidad de crecimiento", "Centraliza la información de diferentes departamentos en un unico sistema"], "a": [3], "h": ""}, {"q": "¿Que herramienta es considerada un estandar para realizar consultas avanzadas en bases de datos XML?", "o": ["XQuery", "css3", "JavaScript", "HTML5"], "a": [0], "h": ""}, {"q": "¿Que lenguaje se utiliza para realizar consultas en bases de datos relacionales?", "o": ["SQL", "XPath", "XQuery", "JSONPath"], "a": [0], "h": ""}, {"q": "¿Qué ventaja ofrecen las bases de datos nativas XML como BaseX exist-db frente a las relacionales?", "o": ["Son mas sencillas de usar porque no requieren lenguajes de consulta", "Ofrecen mejores herramientas de consulta mediante XPath yXQuery para documentos complejos", "Eliminan la necesidad de que el XML este \"bien formado\"", "Permiten almacenar los datos exclusivamente en tablas de filas y columnas"], "a": [1], "h": ""}, {"q": "¿Qué caracteristica de las busquedas en XML permite localizar elementos especificos dentro de documentos muy complejos?", "o": ["Precisión ", "Interoperabilidad", "Escalabilidad", "Versatilidad"], "a": [0], "h": ""}, {"q": "Si una empresa decide almacenar XML en una base de datos NoSQL ¿en que formato es comun convertirlos?", "o": ["MP3", "JSON", "TXT", "PDF"], "a": [1], "h": ""}, {"q": "¿Cual de las siguientes ventajas de las busquedas en XML permite aplicar filtros avanzados y transformaciones en los datos?", "o": ["Flexibilidad ", "Compatibilidad", "Escalabilidad"], "a": [0], "h": ""}, {"q": "La conversion de XML a JSON es una practica comun en sistemas modernos debido a la", "o": ["Facilidad para almacenar grandes volumenes de datos", "Mayor compatibilidad de navegadores web", "Capacidad de JSON para manejar esquemas complejos ", "Simplicidad de JSON para el intercambio de datos"], "a": [3], "h": ""}, {"q": "¿Por que es necesario asociar documentos XML con otras tecnologias?", "o": ["porque un documento XMLpor si solo carece de una forma directa de presentacion o interaccion", "porque los navegadores modernos no pueden abrir archivos ", "porque el estandar XML un archivo css acompañandolo"], "a": [0], "h": ""}, {"q": "en Python ¿que biblioteca se utiliza para manipular el documento XML y modificar su contenido?", "o": ["requests", "Pandas", "xml.etree.ElementTree", "BeautifulSoup"], "a": [2], "h": ""}, {"q": "Segun el apartado de \"Ventajas\" ¿que permite la \"Escalabilidad\" en un contexto de XML de conversion y adaptacion", "o": ["Que el archivo XML se pueda ejecutar como un archivo .exe", "Aumentar el tamaño de la fuente del texto automaticamente", "Que el documento se traduzca a mas de 10 idiomas de forma nativa", "Adaptar los documentos a nuevos requerimientos sin cambiar su estructura"], "a": [3], "h": ""}, {"q": "Para que un documento XML este \"bien formado\"¿que condicion debe cumplir obligatoriamente su estructura?", "o": ["Debe tener al menos dos elementos raiz para balancear los datos", "No puede contener atributos, solo elementos", "Debe tener un unico elemento raiz que contenga a todos los demas", "Las etiquetas de apertura y cierre deben ser de colores distintos"], "a": [2], "h": ""}, {"q": "¿Que significa que XML sea \"Extensible\"?", "o": ["Que los usuarios puedan definir sus propias etiquetas segun sus necesidades", "Que el archivo puede ocupar gigabytes de espacio sin corromperse", "Que las etiquetas se alargan automaticamente", "Que se pueda transformar automaticamente en cualquier lenguaje de programacion "], "a": [0], "h": ""}, {"q": "¿Cual de las siguientes es una caracteristicas fundamental de XML?", "o": ["La necesidad de ser compilado antes de ser ejecutado", "La combinacion obligatoria de datos y diseño visual", "La separacion de dator y su presentacion ", "La limitacion a etiquetas predefinidas por el estandar W3C"], "a": [2], "h": ""}, {"q": "¿Porque es importante definir reglas para los documentos XML?", "o": ["Para garantizar que el documento sea compatible con todos los navegadores", "Para establecer la cantidad de datos que se pueden incluir en el documento", "Para asegurar que el documento se imprima correctamente", "Para asegurar que el documento siga una estructura y formato especificos"], "a": [3], "h": ""}, {"q": "¿Que elemento debe tener todo documento XML bien formado?", "o": ["una instruccion de procesamiento", "una etiqueta", "una etiqueta raiz", "un comentario"], "a": [2], "h": ""}, {"q": "Una ventaja clave de la validacion XML es:", "o": ["Que asegura la integridad de los datos al cumplir reglas definidas", "Que permite ocultar los datos a usuarios no autorizados", "Que convierte automaticamente el XML en una pagina HTML5", "Que permite que el documento ocupe poco espacio en el disco"], "a": [0], "h": ""}, {"q": "¿Cual de los siguientes lenguajes de script de cliente es mas comunmente utilizado para manipular el DOM en las paginas web?", "o": ["JavaScript", "SQL", "css", "PHP"], "a": [0], "h": ""}, {"q": "¿Que se entiende por \"tipado dinamico\" en los lenguajes de script?", "o": ["Solo pueden utilizarse tipos de datos basicos", "No permiten realizar operaciones matematicas ", "El tipo de las variables se define en tiempo de ejecucion", "Las variables deben declararse con su tipo especifico antes de usarse"], "a": [2], "h": ""}, {"q": "¿Cual es el principal uso de JavaScript en el desarrollo web?", "o": ["Creacion de scripts de shell en Linux", "Procesamiento de ", "Manipulacion de datos en bases de datos", "Desarrollo de la interfaz de usuario en el lado del cliente"], "a": [3], "h": ""}, {"q": "¿Cual es una de las principales caracteristicas de los lenguajes de script?", "o": ["Son interpretados y ejecutados linea por linea", "Solo se usar para el desarrollo de aplicaciones moviles", "son compilados antes de ejecutarse", "Requieren espacio estatico"], "a": [0], "h": ""}, {"q": "¿Cual de las siguientes es una ventaja de los lenguajes de script respecto a los compilados?", "o": ["Son mas dificiles de aprender", "Requieren siempre de una compilacion previa", "No permiten la reutilizacion de codigo", "Permiten una depuracion mas rapida y ciclos de desarrollo mas cortos"], "a": [3], "h": ""}, {"q": "¿Cual es el proposito principal del lenguaje XML en comparacion con HTML?", "o": ["Estructuracion de datos", "Presentacion de datos", "Diseño de estilo", "Agregacion de contenido"], "a": [0], "h": ""}, {"q": "Para poder seleccionar varios elementos diferentes a los que se va a modificar las mismas propiedades usaremos", "o": ["Clases (class)", "Propiedades (prop)", "Estilos (Styles)", "Identificadores (id)"], "a": [0], "h": ""}, {"q": "Cual de las siguientes secciones no forma parte del cuerpo del documento HTML", "o": ["\u003cfooter>", "\u003cheader>", "\u003csection>", "\u003chead>"], "a": [3], "h": ""}, {"q": "Que estandar define la estructura basica de un documento HTML", "o": ["XHTML 1.1", "HTML5", "HTML 4.01", "W3C XML Schema"], "a": [1], "h": ""}, {"q": "cual de las siguientes opciones es la correcta para definir un documento HTML", "o": ["\u003chtml>\u003c/html>\u003chead>\u003c/head>\u003cbody>\u003c/body>", "\u003chtml>\u003chead>\u003c/head>\u003c/html>\u003cbody>\u003c/body>", "\u003chtml>\u003chead>\u003c/head>\u003c/html>\u003cbody>\u003c/body>", "\u003chtml>\u003chead>\u003c/head>\u003cbody>\u003c/body>\u003c/html>"], "a": [3], "h": ""}, {"q": "para crear solamente un salto de linea en el documento usaremos la etiqueta", "o": ["\u003cbr>", "\u003ccr>", "\u003ctr>"], "a": [0], "h": ""}, {"q": "dependiendo del tipo de marcas que utilicemos podemos dividir los lenguajes de marca en", "o": ["de presentacion y procedimental", "descriptivo y lexico", "de presentacion descriptivo de intercambio de datos y especializadas", "procedimental y de..."], "a": [2], "h": ""}, {"q": "la etiqueta \u003cmeta> en un documento HTML nos sirve para:", "o": ["Definir los estilos que se aplican a los elementos que se muestran en el documento", "Definir una nueva ruta para las URL relativas del documento", "Importar ficheros externos como programas en JavaScript o documentos CSS", "Definir diferentes valores para la configuracion del documento como el conjunto de caracteres que se puede emplear"], "a": [3], "h": ""}];
+const $app = document.getElementById('app');
+const L = 'ABCD';
+const norm = s => s.trim().replace(/[.\s]+$/,'').toLowerCase();
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+// Correct if the chosen text matches a correct option (source repeats some answers with only a trailing dot changed).
+const isRight = (q, i) => q.a.some(a => norm(q.o[a]) === norm(q.o[i]));
+
+let S;
+function start(ids) {
+  S = { order: shuffle(ids), pos: 0, res: {} };
+  S.order = S.order.map(id => ({ id, opts: shuffle(DATA[id].o.map((_, i) => i)) }));
+  renderTest();
+}
+
+function renderTest() {
+  $app.replaceChildren();
+  if (S.pos >= S.order.length) return renderEnd();
+  const { id, opts } = S.order[S.pos], q = DATA[id], done = S.res[id] !== undefined;
+  const ok = Object.values(S.res).filter(Boolean).length, ko = Object.values(S.res).filter(v => !v).length;
+
+  const meta = el('div', 'meta');
+  meta.innerHTML = `<span>Pregunta <b>${String(S.pos + 1).padStart(2, '0')}</b> / ${S.order.length}</span>`;
+  const sc = el('span', 'score'); sc.innerHTML = `<span class="g">✓ ${ok}</span><span class="r">✗ ${ko}</span>`; meta.append(sc);
+
+  const track = el('div', 'track'); track.style.setProperty('--n', S.order.length);
+  S.order.forEach((o, i) => { const t = el('i'); if (S.res[o.id] !== undefined) t.className = S.res[o.id] ? 'ok' : 'ko'; else if (i === S.pos) t.className = 'cur'; track.append(t); });
+
+  const card = el('section', 'card'); card.dataset.n = String(id + 1).padStart(2, '0');
+  card.append(el('h2', 'q', q.q));
+  const box = el('div', 'opts'); box.setAttribute('role', 'group');
+  opts.forEach((oi, k) => {
+    const b = el('button', 'opt'); b.type = 'button';
+    b.append(el('span', 'k', L[k]), el('span', '', q.o[oi]));
+    b.onclick = () => answer(oi);
+    if (done) {
+      b.disabled = true;
+      if (isRight(q, oi)) b.classList.add('ok');
+      else if (oi === S.pick) b.classList.add('ko');
+      else b.classList.add('dim');
+    }
+    box.append(b);
+  });
+  card.append(box);
+  if (done && q.h) card.append(el('div', 'exp', q.h));
+
+  const nav = el('div', 'nav');
+  nav.append(el('span', 'hint', done ? 'Enter → siguiente' : 'Teclas A–D o 1–4'));
+  const next = el('button', 'btn pri', S.pos + 1 === S.order.length ? 'Ver resultado' : 'Siguiente →');
+  next.hidden = !done; next.onclick = () => { S.pos++; renderTest(); };
+  nav.append(next);
+  card.append(nav);
+
+  $app.append(meta, track, card);
+  if (done) next.focus();
+}
+
+function answer(oi) {
+  const { id } = S.order[S.pos];
+  if (S.res[id] !== undefined) return;
+  S.pick = oi;
+  S.res[id] = isRight(DATA[id], oi);
+  renderTest();
+}
+
+function renderEnd() {
+  const ids = S.order.map(o => o.id), ok = ids.filter(i => S.res[i]).length, fails = ids.filter(i => !S.res[i]);
+  const nota = Math.round(ok / ids.length * 100) / 10;
+  try { const k = 'lm-best', b = +localStorage.getItem(k) || 0; if (ids.length === DATA.length && nota > b) localStorage.setItem(k, nota); } catch (e) {}
+  let best = null; try { best = localStorage.getItem('lm-best'); } catch (e) {}
+  const card = el('section', 'card end');
+  const big = el('div', 'big'); big.innerHTML = `${nota.toLocaleString('es')}<small>/10</small>`;
+  big.style.color = nota >= 5 ? 'var(--ok)' : 'var(--ko)';
+  card.append(big, el('div', 'verdict', `${ok} aciertos · ${fails.length} fallos${best ? ` · mejor nota: ${(+best).toLocaleString('es')}` : ''}`));
+  const row = el('div', 'row');
+  if (fails.length) { const f = el('button', 'btn pri', `Repetir falladas (${fails.length})`); f.onclick = () => start(fails); row.append(f); }
+  const r = el('button', 'btn', 'Test completo de nuevo'); r.onclick = () => start(DATA.map((_, i) => i)); row.append(r);
+  card.append(row);
+  if (fails.length) {
+    const ul = el('ul', 'fails');
+    fails.forEach(i => { const li = el('li', '', DATA[i].q); li.append(el('span', '', '✓ ' + DATA[i].a.map(a => DATA[i].o[a]).join(' / '))); ul.append(li); });
+    card.append(ul);
+  }
+  $app.replaceChildren(card);
+}
+
+function renderReview() {
+  const input = el('input', 'filter'); input.type = 'search'; input.placeholder = 'Buscar pregunta o respuesta…'; input.setAttribute('aria-label', 'Buscar');
+  const list = el('div', 'rev');
+  const items = DATA.map((q, i) => {
+    const a = el('article');
+    const h = el('h3'); h.append(el('b', '', String(i + 1).padStart(2, '0')), q.q); a.append(h);
+    const ul = el('ul'); q.o.forEach((o, j) => ul.append(el('li', q.a.includes(j) ? 'c' : '', o))); a.append(ul);
+    if (q.h) a.append(el('p', '', q.h));
+    list.append(a);
+    return [a, (q.q + ' ' + q.o.join(' ') + ' ' + q.h).toLowerCase()];
+  });
+  input.oninput = () => { const t = input.value.toLowerCase(); items.forEach(([a, s]) => a.hidden = !s.includes(t)); };
+  $app.replaceChildren(input, list);
+}
+
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.tabs button').forEach(x => x.setAttribute('aria-selected', x === b));
+  b.dataset.mode === 'test' ? renderTest() : renderReview();
+});
+
+document.addEventListener('keydown', e => {
+  if (!S || S.pos >= S.order.length || !$app.querySelector('.opts') || e.target.tagName === 'INPUT') return;
+  const { id, opts } = S.order[S.pos], done = S.res[id] !== undefined;
+  const k = '1234'.indexOf(e.key) >= 0 ? '1234'.indexOf(e.key) : L.indexOf(e.key.toUpperCase());
+  if (!done && k >= 0 && k < opts.length && e.key.length === 1) answer(opts[k]);
+  else if (done && (e.key === 'Enter' || e.key === 'ArrowRight')) { e.preventDefault(); S.pos++; renderTest(); }
+});
+
+start(DATA.map((_, i) => i));
+</script>
+</body>
+</html>
