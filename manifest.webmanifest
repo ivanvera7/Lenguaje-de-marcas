@@ -1,0 +1,21 @@
+{
+ "name": "Lenguaje de marcas",
+ "short_name": "Lenguaje de marcas",
+ "start_url": "./",
+ "display": "standalone",
+ "background_color": "#7F45B3",
+ "theme_color": "#B97ED9",
+ "icons": [
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any maskable"
+  },
+  {
+   "src": "icon.svg",
+   "sizes": "any",
+   "type": "image/svg+xml"
+  }
+ ]
+}
